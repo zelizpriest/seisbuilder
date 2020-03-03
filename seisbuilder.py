@@ -1,5 +1,6 @@
 import numpy as np
 import bruges
+import matplotlib.pyplot as plt
 
 
 class SyntheticCube():
@@ -36,6 +37,42 @@ class SyntheticCube():
             self.reflectivity[i, :, :] = self.layers_impedances[idx]
             self.horizons[i, :, :] = idx+1
 
+    # def make_channels(self, channelized_layer_proba=0.2, single_channel_proba=0.7):
+    #     for hdx, hor in enumerate(self.layers_depths[:-1]):
+    #         channelized = np.random.rand()
+    #         if channelized < channelized_layer_proba:
+    #             print('making channel')
+    #             layer_thickness = self.layers_depths[hdx+1] - hor
+    #             max_thick = (layer_thickness*2)//3
+    #             min_thick = max_thick//4
+    #             full_width = 0
+    #             thicknesses = []
+    #             widths = [0]
+    #             while full_width < self.size[2]:
+    #                 thick = np.random.randint(min_thick, max_thick)
+    #                 thicknesses.append(thick)
+    #                 single_width = thick * np.random.randint(2, 6)
+    #                 full_width += single_width
+    #                 widths.append(full_width)
+
+    #             for idx, i in enumerate(widths[:-2]):
+    #                 channel_chance = np.random.rand()
+    #                 # top_ref = np.random.uniform(
+    #                 #     self.reflectivity.min(), self.reflectivity.min())
+    #                 top_ref = - self.layers_impedances[hdx] * 1.2
+    #                 bot_ref = - top_ref
+    #                 if idx % 2 == 1 and channel_chance < single_channel_proba:
+    #                     center = layer_thickness // 2
+    #                     top_chan = hor + center - thicknesses[idx] // 2
+    #                     bot_chan = hor + center + thicknesses[idx] // 2
+    #                     wl = widths[idx]
+    #                     wr = widths[idx+1]
+    #                     self.reflectivity[top_chan, :, wl:wr] = top_ref
+    #                     self.reflectivity[bot_chan, :, wl:wr] = bot_ref
+    #     plt.figure(dpi=300)
+    #     plt.imshow(self.reflectivity[:, 100, :])
+    #     plt.show()
+
     # def add_amplitude_anomalies(self, probability=0.05):
     #     for hor in range(np.unique(self.horizons).size):
     #         rand = np.random.rand()
@@ -53,12 +90,12 @@ class SyntheticCube():
         x = np.arange(0, self.size[0])
         y = np.arange(0, self.size[0])
         for i in range(n_structures):
-            x_center = np.random.randint(0, self.size[0])
-            y_center = np.random.randint(0, self.size[1])
+            x_center = np.random.randint(0, self.size[1])
+            y_center = np.random.randint(0, self.size[2])
             sigma_x = np.random.randint(
-                int(self.size[0]/5), int(self.size[0]/2))
-            sigma_y = np.random.randint(
                 int(self.size[0]/5), int(self.size[1]/2))
+            sigma_y = np.random.randint(
+                int(self.size[0]/5), int(self.size[2]/2))
             amplifier = np.random.normal(0, amp)
             x_m, y_m = np.meshgrid(x, y)
             same_part = amplifier*power*(1/(2*np.pi*sigma_x*sigma_y))
@@ -149,6 +186,7 @@ class SyntheticCube():
 
     def __create_cube(self):
         self.create_horizontal_reflectivity()
+        # self.make_channels()
         # self.add_amplitude_anomalies()
         self.change_layers_thickness()
         self.incline_layers()
