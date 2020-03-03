@@ -119,12 +119,13 @@ class SyntheticCube():
         Convolution of reflectivity coefficients cube with Rickers seismic impulse.
         '''
         impulses = [bruges.filters.ricker(duration=0.098, dt=0.002, f=fr)
-              for fr in np.arange(5, 51, 5)]
+                    for fr in np.arange(5, 51, 5)]
         impulses_amp = np.linspace(0, 1, 3).tolist() + \
             [1]*4 + np.linspace(1, 0.2, 3).tolist()
-        impulses = [impulses[i]*impulses_amp[i] for i in range(len(impulses_amp))]
+        impulses = [impulses[i]*impulses_amp[i]
+                    for i in range(len(impulses_amp))]
         synthetic_diff_freq = [np.apply_along_axis(
-            lambda t: np.convolve(t, impulses), axis=0, arr=self.impedance) for impulse in impulses]
+            lambda t: np.convolve(t, impulse), axis=0, arr=self.impedance) for impulse in impulses]
         self.seismic = np.sum(synthetic_diff_freq, axis=0)[24:-24]
 
     def add_gauss_noise(self, noise_amp=0.1):
@@ -142,26 +143,40 @@ class SyntheticCube():
         self.convolve_impulse()
         self.add_gauss_noise()
 
-    def build_seismic(self):
+    def build_seismic(self, binarize_horizons=True):
         '''
         Function builds cubes of reflectiviti coefficients, horizons and seismic.
+        Args:
+        binarize_horizons (bool, float): If True - horizons will be binarized (is horizon or not)
+        If float horizons with absolute reflectivity higher than float will be left binarized
+        and only them. Default: True
+
         Returns: np.arrays of seismic cube, horizon cube and impedance cube
         '''
         self.__create_cube()
+        if binarize_horizons and type(binarize_horizons) == bool:
+            self.horizons[self.horizons != 0] = 1
+        elif type(binarize_horizons) == float:
+            self.horizons[abs(self.impedance) >= binarize_horizons] = 1
+            self.horizons[abs(self.impedance) < binarize_horizons] = 0
         return self.seismic, self.horizons, self.impedance
 
-    def build_and_save(self, seismic_dir_name: str,
-                       horizons_dir_name: str,
-                       impedance_dir_name: str):
+    def save_cube(self, seismic_dir_name: str,
+                  horizons_dir_name: str,
+                  impedance_dir_name: str,
+                  binarize_horizons=True):
         '''
         Function builds and saves numpy arrays of  three cubes:
         reflectivity coefficients, horizons and seismic.
+
+        Args:
         seismic_dir_name (str): path for seismic file
         horizons_dir_name (str): path for horizons file
         impedance_dir_name (str): path for impedance file
         '''
         if self.seismic is None:
-            self.__create_cube()
+            self.build_seismic()
+
         np.save(seismic_dir_name, self.seismic)
         np.save(horizons_dir_name, self.horizons)
         np.save(impedance_dir_name, self.impedance)
