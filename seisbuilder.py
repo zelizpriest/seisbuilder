@@ -231,4 +231,4 @@ class SyntheticCube():
 
         np.save(seismic_dir_name, self.seismic)
         np.save(horizons_dir_name, self.horizons)
-        np.save(impedance_dir_name, self.reflectivity)
+        np.save(reflectivity_dir_name, self.reflectivity)
